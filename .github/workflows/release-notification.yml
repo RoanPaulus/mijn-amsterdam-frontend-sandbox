@@ -25,9 +25,6 @@ jobs:
       - name: Get latest and previous tags
         id: tags
         run: |
-          # TODO: Remove
-          echo "$GITHUB_OUTPUT"
-
           all_tags=$(git tag -l --sort=-creatordate)
           latest_tag=$(echo "$all_tags" | sed -n '1p')
           previous_tag=$(echo "$all_tags" | sed -n '2p')
@@ -40,9 +37,6 @@ jobs:
 
       - name: Generate Release Notes
         run: |
-          # TODO: Remove
-          echo "$GITHUB_ENV"
-
           echo "Changes between ${{ steps.tags.outputs.previous_tag }} and ${{ steps.tags.outputs.latest_tag }}:" > release-notes.txt
             git log ${{ steps.tags.outputs.previous_tag }}..${{ steps.tags.outputs.latest_tag }} --oneline >> release-notes.txt
             RELEASE_NOTES=$(cat release-notes.txt)
@@ -71,9 +65,13 @@ jobs:
 
       - name: Output Categorized Notes
         run: |
+
           append_to_github_output() {
+            # Replace all double quotes with single quotes to prevent escaping out of a string.
+            sed "s/\"/\'/g" "$1.txt"
+
             if [ ! -s "$1.txt" ]; then
-              echo "$1.txt is empty"
+              echo "$1.txt is empty" >&2
               exit 1
             fi
 
