@@ -1,11 +1,9 @@
 name: Release notification
-env:
-  BASE_REF: ${{ github.base_ref }}
 on:
   push:
     branches:
       - main
-run-name: Generating release notifications for $BASE_REF
+run-name: Generating release notifications for ${{ github.base_ref }}
 
 permissions:
   contents: write
