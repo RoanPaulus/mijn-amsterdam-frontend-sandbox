@@ -95,6 +95,7 @@ jobs:
           CUSTOM_NOTES: ${{ env.CUSTOM_NOTES }}
         id: custom_release_notes
         run: |
+          set -x
           {
             echo "## Release Notes"
             echo "### Chores"
