@@ -95,6 +95,9 @@ jobs:
           CUSTOM_NOTES: ${{ env.CUSTOM_NOTES }}
         id: custom_release_notes
         run: |
+          echo "===START==="
+          echo "$MIJN"
+          echo "===END==="
           set -x
           {
             echo "## Release Notes"
