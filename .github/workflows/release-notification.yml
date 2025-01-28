@@ -1,9 +1,11 @@
 name: Release notification
+env:
+  BASE_REF: ${{ github.base_ref }}
 on:
   push:
     branches:
       - main
-run-name: Generating release notifications for ${{ github.base_ref }}
+run-name: Generating release notifications for $BASE_REF
 
 permissions:
   contents: write
@@ -36,28 +38,35 @@ jobs:
           echo "Second to latest tag: $previous_tag"
 
       - name: Generate Release Notes
+        env:
+          PREVIOUS_TAG: ${{ steps.tags.outputs.previous_tag }}
+          LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
-          echo "Changes between ${{ steps.tags.outputs.previous_tag }} and ${{ steps.tags.outputs.latest_tag }}:" > release-notes.txt
-            git log ${{ steps.tags.outputs.previous_tag }}..${{ steps.tags.outputs.latest_tag }} --oneline >> release-notes.txt
+          echo "Changes between $PREVIOUS_TAG and $LATEST_TAG:" > release-notes.txt
+            git log $PREVIOUS_TAG..$LATEST_TAG --oneline >> release-notes.txt
             RELEASE_NOTES=$(cat release-notes.txt)
             echo "RELEASE_NOTES<<EOF" >> "$GITHUB_ENV"
             echo "$RELEASE_NOTES" >> "$GITHUB_ENV"
             echo "EOF" >> "$GITHUB_ENV"
 
       - name: Create or Update Release
+        env:
+          LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
-          if gh release view ${{ steps.tags.outputs.latest_tag }} &>/dev/null; then
+          if gh release view "$LATEST_TAG" &>/dev/null; then
             echo "Release exists. Updating..."
-              gh release edit ${{ steps.tags.outputs.latest_tag }} --notes "$RELEASE_NOTES"
+              gh release edit "$LATEST_TAG" --notes "$RELEASE_NOTES"
             else
               echo "Creating new release..."
-              gh release create ${{ steps.tags.outputs.latest_tag }} --notes "$RELEASE_NOTES"
+              gh release create "$LATEST_TAG" --notes "$RELEASE_NOTES"
             fi
 
       - name: Divide Notes into Chores, Features, and Bugs
+        env:
+          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
         id: categorize_notes
         run: |
-          echo "${{ env.RELEASE_NOTES }}" > release_notes.txt
+          echo "$RELEASE_NOTES" > release_notes.txt
           grep -iE 'CHORE|MIJN-[0-9]+-CHORE' release_notes.txt | sort -u > chores.txt || true
           grep -iE 'FEATURE:|MIJN-[0-9]+-FEATURE' release_notes.txt > features.txt || true
           grep -iE 'BUG:|MIJN-[0-9]+-BUG' release_notes.txt > bugs.txt || true
@@ -65,11 +74,7 @@ jobs:
 
       - name: Output Categorized Notes
         run: |
-
           append_to_github_output() {
-            # Replace all double quotes with single quotes to prevent escaping out of a string.
-            sed "s/\"/\'/g" "$1.txt"
-
             if [ ! -s "$1.txt" ]; then
               echo "$1.txt is empty" >&2
               exit 1
@@ -85,18 +90,24 @@ jobs:
           append_to_github_output 'mijn'
 
       - name: Create Customized Release Notes
+        env:
+          CHORES: ${{ steps.categorize_notes.outputs.chores }} 
+          FEATURES: ${{ steps.categorize_notes.outputs.features }}
+          BUGS: ${{ steps.categorize_notes.outputs.bugs }}
+          MIJN: ${{ steps.categorize_notes.outputs.mijn }}
+          CUSTOM_NOTES: ${{ env.CUSTOM_NOTES }}
         id: custom_release_notes
         run: |
           {
             echo "## Release Notes"
             echo "### Chores"
-            echo "${{ steps.categorize_notes.outputs.chores }}"
+            echo "$CHORES"
             echo "### Features"
-            echo "${{ steps.categorize_notes.outputs.features }}"
+            echo "$FEATURES"
             echo "### Bugs"
-            echo "${{ steps.categorize_notes.outputs.bugs }}"
+            echo "$BUGS"
             echo "### Mijn"
-            echo "${{ steps.categorize_notes.outputs.mijn }}"
+            echo "$MIJN"
           } > custom_release_notes.txt
           CUSTOM_NOTES=$(cat custom_release_notes.txt)
           echo "CUSTOM_NOTES<<EOF" >> "$GITHUB_ENV"
@@ -104,5 +115,7 @@ jobs:
           echo "EOF" >> "$GITHUB_ENV"
 
       - name: Update Release with Custom Notes
+        env:
+          LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
-          gh release edit ${{ steps.tags.outputs.latest_tag }} --notes "${{ env.CUSTOM_NOTES }}"
+          gh release edit "$LATEST_TAG" --notes "$CUSTOM_NOTES"
