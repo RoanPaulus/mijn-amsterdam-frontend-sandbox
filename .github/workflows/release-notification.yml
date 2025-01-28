@@ -88,6 +88,8 @@ jobs:
           append_to_github_output 'bugs'
           append_to_github_output 'mijn'
 
+          echo "$GITHUB_OUTPUT"
+
       - name: Create Customized Release Notes
         env:
           CHORES: ${{ steps.categorize_notes.outputs.chores }} 
