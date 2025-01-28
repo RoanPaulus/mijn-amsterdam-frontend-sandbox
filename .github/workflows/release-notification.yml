@@ -1,5 +1,8 @@
 name: Release notification
-on: pull_request
+on:
+  push:
+    branches:
+      - main
 run-name: Generating release notifications for ${{ github.base_ref }}
 
 permissions:
@@ -22,6 +25,9 @@ jobs:
       - name: Get latest and previous tags
         id: tags
         run: |
+          # TODO: Remove
+          echo "$GITHUB_OUTPUT"
+
           all_tags=$(git tag -l --sort=-creatordate)
           latest_tag=$(echo "$all_tags" | sed -n '1p')
           previous_tag=$(echo "$all_tags" | sed -n '2p')
@@ -34,6 +40,9 @@ jobs:
 
       - name: Generate Release Notes
         run: |
+          # TODO: Remove
+          echo "$GITHUB_ENV"
+
           echo "Changes between ${{ steps.tags.outputs.previous_tag }} and ${{ steps.tags.outputs.latest_tag }}:" > release-notes.txt
             git log ${{ steps.tags.outputs.previous_tag }}..${{ steps.tags.outputs.latest_tag }} --oneline >> release-notes.txt
             RELEASE_NOTES=$(cat release-notes.txt)
@@ -63,11 +72,14 @@ jobs:
       - name: Output Categorized Notes
         run: |
           append_to_github_output() {
-            if [ -s "$1.txt" ]; then
-              echo "$1<<EOF" >> "$GITHUB_OUTPUT"
-              cat "$1.txt" >> "$GITHUB_OUTPUT"
-              echo "EOF" >> "$GITHUB_OUTPUT"
+            if [ ! -s "$1.txt" ]; then
+              echo "$1.txt is empty"
+              exit 1
             fi
+
+            echo "$1<<EOF" >> "$GITHUB_OUTPUT"
+            cat "$1.txt" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
           }
           append_to_github_output 'chores'
           append_to_github_output 'features'
