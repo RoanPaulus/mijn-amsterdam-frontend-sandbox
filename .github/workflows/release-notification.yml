@@ -64,5 +64,5 @@ jobs:
           RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
           LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
-          CUSTOM_NOTES=$(echo $RELEASE_NOTES | py ./scripts/sort-release-notes.py)
+          CUSTOM_NOTES=$(echo $RELEASE_NOTES | python3 ./scripts/sort-release-notes.py)
           gh release edit "$LATEST_TAG" --notes "$CUSTOM_NOTES"
