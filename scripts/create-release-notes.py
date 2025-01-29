@@ -1,11 +1,18 @@
 import sys
 import re
 from functools import reduce
+import argparse
+
+parser = argparse.ArgumentParser(
+    description="Create release notes for a github workflow."
+)
+
+parser.add_argument("previous_release_tag")
+parser.add_argument("latest_release_tag")
+
+args = parser.parse_args()
     
 release_notes = sys.stdin.read()
-PREVIOUS_TAG = sys.argv[1]
-LATEST_TAG = sys.argv[2]
-
 
 categories = {
     "features": {
@@ -47,16 +54,21 @@ for line in release_notes.split('\n'):
         else:
             print(f"No matches, ignoring '{line}'", file=sys.stderr)
 
+
+amount_of_categories_filled = reduce(lambda acc, key: acc + 1 if categories[key]["commits"] else acc, categories)
+print(amount_of_categories_filled)
 # Format
 # ================================
 categories["other"] = other
 
 RELEASE_SUFFIX = 'release-'
-previous_version = PREVIOUS_TAG.removeprefix(RELEASE_SUFFIX)
-latest_version = LATEST_TAG.removeprefix(RELEASE_SUFFIX)
+previous_version = args.previous_release_tag.removeprefix(RELEASE_SUFFIX)
+latest_version = args.latest_release_tag.removeprefix(RELEASE_SUFFIX)
 
+# Lines entered here are at the top of the release notes.
+# Newlines are entered automatically but can be added for more whitespace.
 release_notes = [
-    f"Here are the updates between the '{previous_version}' and '{latest_version}' releases\n",
+    f"Here are the updates between the {previous_version} and {latest_version} releases.\n",
 ]
 
 def format_category(acc, category):
