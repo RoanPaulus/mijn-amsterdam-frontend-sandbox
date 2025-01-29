@@ -43,9 +43,7 @@ jobs:
           echo "Changes between $PREVIOUS_TAG and $LATEST_TAG:" > release-notes.txt
           git log "$PREVIOUS_TAG..$LATEST_TAG" --oneline >> release-notes.txt
 
-          RELEASE_NOTES=$(cat release-notes.txt | python3 ./scripts/sort-release-notes.py)
-          echo "DEBUG RELEASE NOTES ------"
-          echo "$RELEASE_NOTES"
+          RELEASE_NOTES=$(cat release-notes.txt | python3 ./scripts/create-release-notes.py)
 
           echo "RELEASE_NOTES<<EOF" >> "$GITHUB_ENV"
           echo "$RELEASE_NOTES" >> "$GITHUB_ENV"
