@@ -72,7 +72,6 @@ jobs:
 
       - name: Output Categorized Notes
         run: |
-          set -x
           append_to_github_output() {
             if [ ! -s "$1.txt" ]; then
               echo "$1.txt is empty"
@@ -88,6 +87,7 @@ jobs:
           append_to_github_output 'bugs'
           append_to_github_output 'mijn'
 
+          echo "DEBUG: Github output:"
           cat "$GITHUB_OUTPUT"
 
       - name: Create Customized Release Notes
@@ -115,6 +115,8 @@ jobs:
           echo "$CUSTOM_NOTES" >> "$GITHUB_ENV"
           echo "EOF" >> "$GITHUB_ENV"
 
+          echo "DEBUG: CUSTOM_NOTES"
+          echo "$CUSTOM_NOTES"
       - name: Update Release with Custom Notes
         env:
           LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
