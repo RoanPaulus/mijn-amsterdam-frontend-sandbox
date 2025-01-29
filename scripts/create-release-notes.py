@@ -51,8 +51,12 @@ for line in release_notes.split('\n'):
 # ================================
 categories["other"] = other
 
+RELEASE_SUFFIX = 'release-'
+previous_version = PREVIOUS_TAG.removeprefix(RELEASE_SUFFIX)
+latest_version = LATEST_TAG.removeprefix(RELEASE_SUFFIX)
+
 release_notes = [
-    f"Here are the updates between the releases '{PREVIOUS_TAG}' and '{LATEST_TAG}'\n",
+    f"Here are the updates between the '{previous_version}' and '{latest_version}' releases\n",
 ]
 
 def format_category(acc, category):
