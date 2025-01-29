@@ -52,7 +52,6 @@ for line in release_notes.split('\n'):
 categories["other"] = other
 
 release_notes = [
-    "## Release Notes\n",
     f"Changes between {PREVIOUS_TAG} and {LATEST_TAG}\n",
 ]
 
@@ -62,7 +61,7 @@ def format_category(acc, category):
         return acc
 
     # Add title in markdown.
-    acc.append(f"### {category.title()}\n")
+    acc.append(f"## {category.title()}\n")
 
     for commit in commits:
         acc.append(commit)
