@@ -1,4 +1,4 @@
-name: Release notification
+name: Release Notes
 on:
   push:
     branches:
@@ -8,7 +8,7 @@ run-name: Generating release notifications for ${{ github.base_ref }}
 permissions:
   contents: write
 jobs:
-  create-notification:
+  create-publish-release-notes:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,60 +59,9 @@ jobs:
               gh release create "$LATEST_TAG" --notes "$RELEASE_NOTES"
             fi
 
-      - name: Divide Notes into Chores, Features, and Bugs
-        env:
-          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
-        id: categorize_notes
-        run: |
-          # TODO: Error handling can be better too...
-          echo "$RELEASE_NOTES" > release_notes.txt
-          {
-            echo "CHORES<<EOF"
-            grep -iE 'CHORE|MIJN-[0-9]+-CHORE' release_notes.txt | sort -u|| true
-            echo "EOF"
-
-            echo "FEATURES<<EOF"
-            grep -iE 'FEATURE:|MIJN-[0-9]+-FEATURE' release_notes.txt|| true
-            echo "EOF"
-
-            echo "BUGS<<EOF"
-            grep -iE 'BUG:|MIJN-[0-9]+-BUG' release_notes.txt|| true
-            echo "EOF"
-
-            echo "MIJN<<EOF"
-            grep -iE 'MIJN-[0-9]+($|[^-])' release_notes.txt|| true
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Create Customized Release Notes
-        env:
-          CHORES: ${{ steps.categorize_notes.outputs.CHORES }} 
-          FEATURES: ${{ steps.categorize_notes.outputs.FEATURES }}
-          BUGS: ${{ steps.categorize_notes.outputs.BUGS }}
-          MIJN: ${{ steps.categorize_notes.outputs.MIJN }}
-          CUSTOM_NOTES: ${{ env.CUSTOM_NOTES }}
-        id: custom_release_notes
-        run: |
-          {
-            echo "## Release Notes"
-            echo "### Chores"
-            echo "$CHORES"
-            echo "### Features"
-            echo "$FEATURES"
-            echo "### Bugs"
-            echo "$BUGS"
-            echo "### Mijn"
-            echo "$MIJN"
-          } > custom_release_notes.txt
-          CUSTOM_NOTES=$(cat custom_release_notes.txt)
-          echo "CUSTOM_NOTES<<EOF" >> "$GITHUB_ENV"
-          echo "$CUSTOM_NOTES" >> "$GITHUB_ENV"
-          echo "EOF" >> "$GITHUB_ENV"
-
-          echo "DEBUG: CUSTOM_NOTES"
-          echo "$CUSTOM_NOTES"
       - name: Update Release with Custom Notes
         env:
           LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
+          CUSTOM_NOTES=$(cat release_notes.txt | py ./scripts/sort-release-notes.py)
           gh release edit "$LATEST_TAG" --notes "$CUSTOM_NOTES"
