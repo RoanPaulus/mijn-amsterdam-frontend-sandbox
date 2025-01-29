@@ -64,6 +64,7 @@ jobs:
           RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
         id: categorize_notes
         run: |
+          # TODO: Do not write to file but store release notes in variable.
           echo "$RELEASE_NOTES" > release_notes.txt
           grep -iE 'CHORE|MIJN-[0-9]+-CHORE' release_notes.txt | sort -u > chores.txt || true
           grep -iE 'FEATURE:|MIJN-[0-9]+-FEATURE' release_notes.txt > features.txt || true
@@ -78,6 +79,10 @@ jobs:
               return 0
             fi
 
+            echo "DEBUG: $1.txt contents"
+            echo "$1.txt"
+
+            # Create multiline strings delimited by EOF for subsequent runner steps.
             echo "$1<<EOF" >> "$GITHUB_OUTPUT"
             cat "$1.txt" >> "$GITHUB_OUTPUT"
             echo "EOF" >> "$GITHUB_OUTPUT"
