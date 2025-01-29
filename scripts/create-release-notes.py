@@ -1,8 +1,11 @@
 import sys
 import re
 from functools import reduce
-
+    
 release_notes = sys.stdin.read()
+PREVIOUS_TAG = sys.argv[1]
+LATEST_TAG = sys.argv[2]
+
 
 categories = {
     "features": {
@@ -48,7 +51,10 @@ for line in release_notes.split('\n'):
 # ================================
 categories["other"] = other
 
-release_notes = ["## Release Notes\n"]
+release_notes = [
+    "## Release Notes\n",
+    f"Changes between {PREVIOUS_TAG} and {LATEST_TAG}\n",
+]
 
 def format_category(acc, category):
     commits = categories[category]["commits"]
