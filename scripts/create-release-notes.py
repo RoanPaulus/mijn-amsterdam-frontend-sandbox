@@ -55,8 +55,6 @@ for line in release_notes.split('\n'):
             print(f"No matches, ignoring '{line}'", file=sys.stderr)
 
 
-amount_of_categories_filled = reduce(lambda acc, key: acc + 1 if categories[key]["commits"] else acc, categories)
-print(amount_of_categories_filled)
 # Format
 # ================================
 categories["other"] = other
