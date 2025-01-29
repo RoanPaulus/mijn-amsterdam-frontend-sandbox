@@ -35,8 +35,7 @@ jobs:
           # Generate Notes
            
           release_notes=$(git log "$previous_tag..$latest_tag" --oneline)
-
-          release_notes=$(cat release-notes.txt | python3\
+          release_notes=$(echo "$release_notes" | python3\
             ./scripts/create-release-notes.py\
             "$previous_tag"\
             "$latest_tag"\
