@@ -25,43 +25,29 @@ jobs:
       - name: Get latest and previous tags
         id: tags
         run: |
+          # Fetch tags
+          
           all_tags=$(git tag -l --sort=-creatordate)
+
           latest_tag=$(echo "$all_tags" | sed -n '1p')
           previous_tag=$(echo "$all_tags" | sed -n '2p')
-          echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
-          echo "previous_tag=$previous_tag" >> "$GITHUB_OUTPUT"
 
-          # Debug output
-          echo "Latest tag: $latest_tag"
-          echo "Second to latest tag: $previous_tag"
+          # Generate Notes
+           
+          release_notes=$(git log "$previous_tag..$latest_tag" --oneline)
 
-      - name: Generate Release Notes
-        env:
-          PREVIOUS_TAG: ${{ steps.tags.outputs.previous_tag }}
-          LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
-        run: |
-          echo "Changes between $PREVIOUS_TAG and $LATEST_TAG:" > release-notes.txt
-          git log "$PREVIOUS_TAG..$LATEST_TAG" --oneline >> release-notes.txt
-
-          RELEASE_NOTES=$(cat release-notes.txt | python3\
+          release_notes=$(cat release-notes.txt | python3\
             ./scripts/create-release-notes.py\
-            "$PREVIOUS_TAG"\
-            "$LATEST_TAG"\
+            "$previous_tag"\
+            "$latest_tag"\
           )
 
-          echo "RELEASE_NOTES<<EOF" >> "$GITHUB_ENV"
-          echo "$RELEASE_NOTES" >> "$GITHUB_ENV"
-          echo "EOF" >> "$GITHUB_ENV"
+          # Create or update release
 
-      - name: Create or Update Release
-        env:
-          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
-          LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
-        run: |
-          if gh release view "$LATEST_TAG" &>/dev/null; then
+          if gh release view "$latest_tag" &>/dev/null; then
             echo "Release exists. Updating..."
-            gh release edit "$LATEST_TAG" --notes "$RELEASE_NOTES"
+            gh release edit "$latest_tag" --notes "$release_notes"
           else
             echo "Creating new release..."
-            gh release create "$LATEST_TAG" --notes "$RELEASE_NOTES"
+            gh release create "$latest_tag" --notes "$release_notes"
           fi
