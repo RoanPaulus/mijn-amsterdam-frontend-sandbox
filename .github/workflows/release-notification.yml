@@ -68,4 +68,4 @@ jobs:
           RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
           LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
-          gh release edit "$LATEST_TAG" --notes "$CUSTOM_NOTES"
+          gh release edit "$LATEST_TAG" --notes "$RELEASE_NOTES"
