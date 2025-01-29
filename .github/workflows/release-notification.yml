@@ -55,19 +55,13 @@ jobs:
 
       - name: Create or Update Release
         env:
+          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
           LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
           if gh release view "$LATEST_TAG" &>/dev/null; then
             echo "Release exists. Updating..."
-              gh release edit "$LATEST_TAG" --notes "$RELEASE_NOTES"
-            else
-              echo "Creating new release..."
-              gh release create "$LATEST_TAG" --notes "$RELEASE_NOTES"
-            fi
-
-      - name: Update Release with Custom Notes
-        env:
-          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
-          LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
-        run: |
-          gh release edit "$LATEST_TAG" --notes "$RELEASE_NOTES"
+            gh release edit "$LATEST_TAG" --notes "$RELEASE_NOTES"
+          else
+            echo "Creating new release..."
+            gh release create "$LATEST_TAG" --notes "$RELEASE_NOTES"
+          fi

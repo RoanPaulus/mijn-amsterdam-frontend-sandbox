@@ -13,6 +13,8 @@ parser.add_argument("latest_release_tag")
 args = parser.parse_args()
     
 release_notes = sys.stdin.read()
+if not release_notes:
+    raise Exception("Release notes read from the stdin are empty")
 
 categories = {
     "features": {
@@ -38,7 +40,6 @@ other = {
 # Sort release notes
 # ==================
 for line in release_notes.split('\n'):
-
     def identify(acc, category):
         if categories[category]["pattern"].search(line):
             return category
@@ -49,11 +50,8 @@ for line in release_notes.split('\n'):
     try:
         categories[category]["commits"].append(line)
     except KeyError:
-        if (other["pattern"].match(line)):
+        if other["pattern"].match(line):
             other["commits"].append(line)
-        else:
-            print(f"No matches, ignoring '{line}'", file=sys.stderr)
-
 
 # Format
 # ================================
@@ -68,6 +66,8 @@ latest_version = args.latest_release_tag.removeprefix(RELEASE_SUFFIX)
 release_notes = [
     f"Here are the updates between the {previous_version} and {latest_version} releases.\n",
 ]
+
+release_notes_size = len(release_notes)
 
 def format_category(acc, category):
     commits = categories[category]["commits"]
@@ -86,5 +86,8 @@ def format_category(acc, category):
     return acc
 
 release_notes = reduce(format_category, categories, release_notes)
+if release_notes_size == len(release_notes):
+    raise Exception("Not a single line added to the release notes.")
+
 print('\n'.join(release_notes))
 
