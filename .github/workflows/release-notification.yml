@@ -80,7 +80,7 @@ jobs:
             fi
 
             echo "DEBUG: $1.txt contents"
-            echo "$1.txt"
+            cat "$1.txt"
 
             # Create multiline strings delimited by EOF for subsequent runner steps.
             echo "$1<<EOF" >> "$GITHUB_OUTPUT"
