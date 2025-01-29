@@ -41,11 +41,15 @@ jobs:
           LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
           echo "Changes between $PREVIOUS_TAG and $LATEST_TAG:" > release-notes.txt
-            git log "$PREVIOUS_TAG..$LATEST_TAG" --oneline >> release-notes.txt
-            RELEASE_NOTES=$(cat release-notes.txt)
-            echo "RELEASE_NOTES<<EOF" >> "$GITHUB_ENV"
-            echo "$RELEASE_NOTES" >> "$GITHUB_ENV"
-            echo "EOF" >> "$GITHUB_ENV"
+          git log "$PREVIOUS_TAG..$LATEST_TAG" --oneline >> release-notes.txt
+
+          RELEASE_NOTES=$(cat release-notes.txt | python3 ./scripts/sort-release-notes.py)
+          echo "DEBUG RELEASE NOTES ------"
+          echo "$RELEASE_NOTES"
+
+          echo "RELEASE_NOTES<<EOF" >> "$GITHUB_ENV"
+          echo "$RELEASE_NOTES" >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
 
       - name: Create or Update Release
         env:
@@ -64,5 +68,4 @@ jobs:
           RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
           LATEST_TAG: ${{ steps.tags.outputs.latest_tag }}
         run: |
-          CUSTOM_NOTES=$(echo $RELEASE_NOTES | python3 ./scripts/sort-release-notes.py)
           gh release edit "$LATEST_TAG" --notes "$CUSTOM_NOTES"
